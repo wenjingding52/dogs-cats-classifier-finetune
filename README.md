@@ -73,8 +73,8 @@ python split_data.py
 
 The script will automatically:
 
-1. Randomly select 500 photos of kittens and 500 photos of puppies from the train folder as test samples.
-2. Randomly select 100 photos of kittens and 100 photos of puppies from the train folder as validation samples.
+1. Randomly select 500 cat images and 500 dog images from the original `Cat_Original` and `Dog_Original` folders as training samples.
+2. Randomly select 100 cat images and 100 dog images from the remaining original images as validation samples.
 
 ### 4.2 Core experimental code
 
