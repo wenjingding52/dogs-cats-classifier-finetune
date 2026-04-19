@@ -12,7 +12,17 @@ This project implements a binary image classification system to distinguish betw
 
 ---
 
-## 2. Project structure
+## 2. Dataset Source
+
+The project uses the 
+**Cats and Dogs Dataset**
+ provided by Microsoft Research. You can download the dataset directly from the official Microsoft download center:
+
+- **Official Download Link:** [Microsoft Cats and Dogs Dataset](https://www.microsoft.com/en-us/download/details.aspx?id=54765
+
+---
+
+## 3. Project structure
 
 - `Cat_Original` file folder
 - `Dog_Original` file folder  
@@ -48,24 +58,24 @@ Model weights trained from scratch
 
 ---
 
-## 3. Environment configuration
+## 4. Environment configuration
 
-### 3.1 Create a virtual environment (recommended)
+### 4.1 Create a virtual environment (recommended)
 ```bash
 python -m venv venv
 .venv\Scripts\activate
 ```
 
-### 3.2 Install dependency packages
+### 4.2 Install dependency packages
 ```bash
 pip install -r requirements.txt
 ```
 
 ---
 
-## 4. Program running
+## 5. Program running
 
-### 4.1 Data sampling
+### 5.1 Data sampling
 
 ```bash
 python split_data.py
@@ -76,7 +86,7 @@ The script will automatically:
 1. Randomly select 500 cat images and 500 dog images from the original `Cat_Original` and `Dog_Original` folders as training samples.
 2. Randomly select 100 cat images and 100 dog images from the remaining original images as validation samples.
 
-### 4.2 Core experimental code
+### 5.2 Core experimental code
 
 ```bash
 python main.py
