@@ -40,6 +40,12 @@ Project description document
 - `sample_predictions.png`           
 Visualization results
 
+- `fine_tuned_model.pth`
+Fine-tuned model weights
+
+- `scratch_model.pth`
+Model weights trained from scratch
+
 ---
 
 ## 3. Environment configuration
