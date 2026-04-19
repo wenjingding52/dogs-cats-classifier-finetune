@@ -1,0 +1,10 @@
+# Ignore the original dataset folder
+Cat_Original/
+Dog_Original/
+
+# Ignore model weight files
+*.pth
+
+# Ignore the virtual environment
+venv/
+.venv/
