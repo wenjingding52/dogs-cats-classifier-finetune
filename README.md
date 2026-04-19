@@ -6,8 +6,8 @@ This project implements a binary image classification system to distinguish betw
 
 ## 1. Experimental results
 
-- Fine-tuned model: Validation accuracy ≈ 
-- Training from scratch: Validation accuracy ≈ 
+- Fine-tuned model: Validation accuracy = **0.8650** (86.50%) 
+- Training from scratch: Validation accuracy = **0.5000** (50.00%) 
 - ✅ Fine-tuning is significantly superior to training from scratch, verifying the strong generalization ability of pre-trained models on small datasets
 
 ---

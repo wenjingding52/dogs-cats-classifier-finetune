@@ -1,4 +1,3 @@
-# main.py
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -10,44 +9,7 @@ import os
 from pathlib import Path
 
 # ----------------------------
-# 1. Set up the device
-# ----------------------------
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using device: {device}")
-
-# ----------------------------
-# 2. Data Preprocessing & Loader
-# ----------------------------
-data_transforms = {
-    'train': transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ]),
-    'val': transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
-}
-
-data_dir = Path("dogs_vs_cats_small")
-image_datasets = {
-    x: datasets.ImageFolder(root=data_dir / x, transform=data_transforms[x])
-    for x in ['train', 'val']
-}
-dataloaders = {
-    x: DataLoader(image_datasets[x], batch_size=32, shuffle=(x == 'train'), num_workers=2)
-    for x in ['train', 'val']
-}
-dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
-class_names = image_datasets['train'].classes  # ['cat', 'dog']
-
-print(f"Train size: {dataset_sizes['train']}, Val size: {dataset_sizes['val']}")
-print(f"Classes: {class_names}")
-
-# ----------------------------
-# 3. Define the training function
+# 1. Define functions FIRST
 # ----------------------------
 def train_model(model, criterion, optimizer, num_epochs=5):
     model.to(device)
@@ -102,48 +64,6 @@ def train_model(model, criterion, optimizer, num_epochs=5):
 
     return model, train_acc_history, val_acc_history
 
-# ----------------------------
-# 4. Experiment 1: Fine-tuning
-# ----------------------------
-print("\nStarting the fine-tuning experiment...")
-model_ft = models.resnet18(pretrained=True) 
-num_ftrs = model_ft.fc.in_features
-model_ft.fc = nn.Linear(num_ftrs, 2)
-
-criterion = nn.CrossEntropyLoss()
-optimizer_ft = optim.Adam(model_ft.parameters(), lr=0.001)
-
-model_ft, train_acc_ft, val_acc_ft = train_model(model_ft, criterion, optimizer_ft, num_epochs=5)
-
-# ----------------------------
-# 5. Experiment 2: Training from Scratch
-# ----------------------------
-print("\nStart training the experiment from scratch...")
-model_scratch = models.resnet18(pretrained=False)
-num_ftrs = model_scratch.fc.in_features
-model_scratch.fc = nn.Linear(num_ftrs, 2)
-
-optimizer_scratch = optim.Adam(model_scratch.parameters(), lr=0.001)
-
-model_scratch, train_acc_s, val_acc_s = train_model(model_scratch, criterion, optimizer_scratch, num_epochs=5)
-
-# ----------------------------
-# 6. Plot the accuracy comparison chart (Figure 1)
-# ----------------------------
-epochs = list(range(1, 6))
-plt.figure(figsize=(8, 5))
-plt.plot(epochs, val_acc_ft, 'o-', label='Fine-tuning (Val)', color='blue')
-plt.plot(epochs, val_acc_s, 's--', label='Scratch (Val)', color='red')
-plt.title('Accuracy: Fine-tuning vs. Scratch')
-plt.xlabel('Epoch')
-plt.ylabel('Validation Accuracy')
-plt.legend()
-plt.grid(True)
-plt.savefig("accuracy_comparison.png", dpi=150, bbox_inches='tight')
-
-# ----------------------------
-# 7. Visualization of prediction results (Figure 2)
-# ----------------------------
 def visualize_predictions(model, num_images=6):
     was_training = model.training
     model.eval()
@@ -181,15 +101,109 @@ def visualize_predictions(model, num_images=6):
     plt.tight_layout()
     plt.savefig("sample_predictions.png", dpi=150, bbox_inches='tight')
 
-visualize_predictions(model_ft)
-
 # ----------------------------
-# 8. Print the final result summary
+# 2. Main execution
 # ----------------------------
-print("\nExperiment completed:")
-print(f"Final validation accuracy of the fine-tuned model: {val_acc_ft[-1]:.4f}")
-print(f"Final validation accuracy of the model trained from scratch:{val_acc_s[-1]:.4f}")
-print(f"Fine-tuning is superior to training from scratch: {(val_acc_ft[-1] - val_acc_s[-1])*100:.2f}%")
+if __name__ == '__main__':
+    # ----------------------------
+    # 1. Set up the device
+    # ----------------------------
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
 
-torch.save(model_ft.state_dict(), 'fine_tuned_model.pth')
-torch.save(model_scratch.state_dict(), 'scratch_model.pth')
+    # ----------------------------
+    # 2. Data Preprocessing & Loader
+    # ----------------------------
+    data_transforms = {
+        'train': transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ]),
+        'val': transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ])
+    }
+
+    data_dir = Path("dogs_vs_cats_small")
+    
+    if not data_dir.exists():
+        raise FileNotFoundError(f"Data directory '{data_dir}' does not exist! Please create it.")
+    if not (data_dir / 'train').exists() or not (data_dir / 'val').exists():
+        raise FileNotFoundError(f"Expected subdirectories 'train/' and 'val/' under '{data_dir}'")
+
+    image_datasets = {
+        x: datasets.ImageFolder(root=data_dir / x, transform=data_transforms[x])
+        for x in ['train', 'val']
+    }
+    # 临时改为 num_workers=0 避免 Windows 卡死
+    dataloaders = {
+        x: DataLoader(image_datasets[x], batch_size=32, shuffle=(x == 'train'), num_workers=0)
+        for x in ['train', 'val']
+    }
+    dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
+    class_names = image_datasets['train'].classes  # ['cat', 'dog']
+
+    print(f"Train size: {dataset_sizes['train']}, Val size: {dataset_sizes['val']}")
+    print(f"Classes: {class_names}")
+
+    # ----------------------------
+    # 3. Define loss and optimizer
+    # ----------------------------
+    criterion = nn.CrossEntropyLoss()
+
+    # ----------------------------
+    # 4. Experiment 1: Fine-tuning
+    # ----------------------------
+    print("\nStarting the fine-tuning experiment...")
+    model_ft = models.resnet18(pretrained=True) 
+    num_ftrs = model_ft.fc.in_features
+    model_ft.fc = nn.Linear(num_ftrs, 2)
+
+    optimizer_ft = optim.Adam(model_ft.parameters(), lr=0.001)
+
+    model_ft, train_acc_ft, val_acc_ft = train_model(model_ft, criterion, optimizer_ft, num_epochs=5)
+
+    # ----------------------------
+    # 5. Experiment 2: Training from Scratch
+    # ----------------------------
+    print("\nStart training the experiment from scratch...")
+    model_scratch = models.resnet18(pretrained=False)
+    num_ftrs = model_scratch.fc.in_features
+    model_scratch.fc = nn.Linear(num_ftrs, 2)
+
+    optimizer_scratch = optim.Adam(model_scratch.parameters(), lr=0.001)
+
+    model_scratch, train_acc_s, val_acc_s = train_model(model_scratch, criterion, optimizer_scratch, num_epochs=5)
+
+    # ----------------------------
+    # 6. Plot the accuracy comparison chart (Figure 1)
+    # ----------------------------
+    epochs = list(range(1, 6))
+    plt.figure(figsize=(8, 5))
+    plt.plot(epochs, val_acc_ft, 'o-', label='Fine-tuning (Val)', color='blue')
+    plt.plot(epochs, val_acc_s, 's--', label='Scratch (Val)', color='red')
+    plt.title('Accuracy: Fine-tuning vs. Scratch')
+    plt.xlabel('Epoch')
+    plt.ylabel('Validation Accuracy')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig("accuracy_comparison.png", dpi=150, bbox_inches='tight')
+
+    # ----------------------------
+    # 7. Visualization of prediction results (Figure 2)
+    # ----------------------------
+    visualize_predictions(model_ft)
+
+    # ----------------------------
+    # 8. Print the final result summary
+    # ----------------------------
+    print("\nExperiment completed:")
+    print(f"Final validation accuracy of the fine-tuned model: {val_acc_ft[-1]:.4f}")
+    print(f"Final validation accuracy of the model trained from scratch: {val_acc_s[-1]:.4f}")
+    print(f"Fine-tuning is superior to training from scratch: {(val_acc_ft[-1] - val_acc_s[-1])*100:.2f}%")
+
+    torch.save(model_ft.state_dict(), 'fine_tuned_model.pth')
+    torch.save(model_scratch.state_dict(), 'scratch_model.pth')
